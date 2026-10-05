@@ -1,44 +1,39 @@
 # Uso (desarrollo):
 #   docker compose up --build
-# Uso (produccion):
+# Uso (produccion local):
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# En Render NO se usa este archivo: Render construye el Dockerfile del repo y
+# recibe la base de datos desde DATABASE_URL.
 
 name: dockerize
 
 services:
-  # ---------- Base de datos MySQL -----------------------------------------
+  # ---------- Base de datos PostgreSQL -------------------------------------
   db:
-    image: mysql:8.0
+    image: postgres:16
     container_name: dockerize_db
     restart: unless-stopped
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-docker_basico}
-      # Usuario dedicado para la app (MySQL no admite MYSQL_USER=root)
-      MYSQL_USER: ${MYSQL_APP_USER:-dockerize}
-      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:-dockerize}
+      POSTGRES_DB: ${POSTGRES_DB:-docker_basico}
+      POSTGRES_USER: ${POSTGRES_USER:-dockerize}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dockerize}
       TZ: ${TZ:-America/Bogota}
     ports:
-      - "${DB_PORT:-3307}:3306"
+      # Puerto publicado en tu maquina. Dentro del contenedor siempre es 5432.
+      # 5433 por defecto porque el 5432 del host suele estar ocupado por un
+      # PostgreSQL local; cámbialo con DB_PORT en el .env de la raíz.
+      - "${DB_PORT:-5433}:5432"
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
     healthcheck:
       test:
-        - CMD
-        - mysqladmin
-        - ping
-        - -h
-        - 127.0.0.1
-        - -u
-        - root
-        - -p${MYSQL_ROOT_PASSWORD:-root}
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER:-dockerize} -d ${POSTGRES_DB:-docker_basico}
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 40s
+      start_period: 30s
     networks:
       - dockerize
 
@@ -52,32 +47,32 @@ services:
     env_file:
       - backend/.env
     environment:
-      # Dentro de la red de Docker el host de MySQL es el servicio "db"
-      MYSQL_HOST: db
-      MYSQL_PORT: 3306
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-docker_basico}
-      MYSQL_USER: ${MYSQL_APP_USER:-dockerize}
-      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:-dockerize}
+      # Dentro de la red de Docker el host de la base es el servicio "db".
+      DATABASE_URL: >-
+        postgres://${POSTGRES_USER:-dockerize}:${POSTGRES_PASSWORD:-dockerize}@db:5432/${POSTGRES_DB:-docker_basico}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,web}
       DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
       TZ: ${TZ:-America/Bogota}
       DJANGO_CARGAR_DATOS: ${DJANGO_CARGAR_DATOS:-1}
+      PORT: ${WEB_PORT:-8000}
       DB_WAIT_ATTEMPTS: 40
     ports:
-      - "${WEB_PORT:-8000}:8000"
+      - "${WEB_PORT:-8000}:${WEB_PORT:-8000}"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - dockerize
 
-  # ---------- MySQL Admin (perfil opcional) -------------------------------
+  # ---------- Cliente SQL (perfil opcional) -------------------------------
   adminer:
     image: adminer:5
     container_name: dockerize_adminer
     restart: unless-stopped
     environment:
-      ADMINER_DEFAULT_SERVER: db
+      # Adminer abre PostgreSQL con una DSN.
+      ADMINER_DEFAULT_SERVER: >-
+        postgres://${POSTGRES_USER:-dockerize}:${POSTGRES_PASSWORD:-dockerize}@db:5432/${POSTGRES_DB:-docker_basico}
     ports:
       - "${ADMINER_PORT:-8082}:8080"
     depends_on:

@@ -11,14 +11,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Herramientas de compilacion para mysqlclient (se descartan en la imagen final)
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        pkg-config \
-        default-libmysqlclient-dev \
-    && rm -rf /var/lib/apt/lists/*
-
+# psycopg[binary] y dj-database-url traen ruedas ya compiladas, asi que no hace
+# falta ningun compilador ni cliente de MySQL en la imagen.
 COPY backend/requirements.txt ./requirements.txt
 RUN python -m venv /venv \
     && /venv/bin/pip install --upgrade pip \
@@ -33,11 +27,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DJANGO_SETTINGS_MODULE=config.settings \
     PATH="/venv/bin:$PATH"
 
-# Solo las librerias de MySQL en tiempo de ejecucion
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends default-libmysqlclient-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && useradd --create-home --uid 1000 appuser
+RUN useradd --create-home --uid 1000 appuser
 
 COPY --from=deps /venv /venv
 
@@ -52,8 +42,11 @@ USER appuser
 
 EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8000/', timeout=4).status == 200 else sys.exit(1)"
+# El puerto lo fija el entorno: Render inyecta PORT (por defecto 10000) y
+# docker-compose deja 8000. El healthcheck debe consultar el mismo puerto que
+# escucha Gunicorn, por eso se lee de $PORT y no se escribe 8000 a mano.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD python -c "import os,sys,urllib.request; port=os.environ.get('PORT','8000'); sys.exit(0 if urllib.request.urlopen(f'http://127.0.0.1:{port}/', timeout=4).status==200 else sys.exit(1))"
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["web"]

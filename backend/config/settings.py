@@ -21,6 +21,10 @@ CSRF_TRUSTED_ORIGINS = Config.SECURITY.CSRF_TRUSTED_ORIGINS
 SECURE_SSL_REDIRECT = Config.SECURITY.SECURE_SSL_REDIRECT
 SESSION_COOKIE_SECURE = Config.SECURITY.SESSION_COOKIE_SECURE
 CSRF_COOKIE_SECURE = Config.SECURITY.CSRF_COOKIE_SECURE
+if Config.SECURITY.TRUST_X_FORWARDED_PROTO:
+    # Necesario para que SECURE_SSL_REDIRECT funcione detras del proxy de
+    # Render, que termina TLS y reenvia el esquema en una cabecera.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # --- Apps ------------------------------------------------------------------
 INSTALLED_APPS = Config.APPS.INSTALLED
@@ -42,7 +46,8 @@ ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-# --- Base de datos (MySQL) -------------------------------------------------
+# --- Base de datos (PostgreSQL via DATABASE_URL) ---------------------------
+# La DSN llega del entorno; si no hay ninguna se usa SQLite (ver config/conf.py).
 DATABASES = Config.DATABASES.databases()
 
 # --- Templates y estaticos (frontend) --------------------------------------

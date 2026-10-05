@@ -1,16 +1,23 @@
-# Produccion: sobreescribe docker-compose.yml
+# Produccion local: sobreescribe docker-compose.yml
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# En Render no se usa este archivo. Alli el Web Service se construye con el
+# Dockerfile del repositorio y la base de datos llega por DATABASE_URL, sin
+# ningun servicio "db" de Docker del que depender.
 
 services:
   web:
     environment:
       DJANGO_DEBUG: "False"
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-cambia-esta-clave-en-produccion}
+      # Obligatoria: con DEBUG=False el proyecto se niega a arrancar si se usa
+      # la clave de desarrollo.
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?define DJANGO_SECRET_KEY en el .env de la raiz}
       DJANGO_CSRF_COOKIE_SECURE: ${DJANGO_CSRF_COOKIE_SECURE:-0}
       DJANGO_SESSION_COOKIE_SECURE: ${DJANGO_SESSION_COOKIE_SECURE:-0}
       GUNICORN_WORKERS: ${GUNICORN_WORKERS:-3}
       GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-60}
       DJANGO_CARGAR_DATOS: "0"
+      PORT: ${WEB_PORT:-8000}
     command: ["web"]
 
   db:

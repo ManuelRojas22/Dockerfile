@@ -7,6 +7,10 @@ Django espera a nivel de modulo.
 
 import os
 from pathlib import Path
+from urllib.parse import quote
+
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Raiz del proyecto: .../proyecto basico
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -16,6 +20,10 @@ BACKEND_DIR = BASE_DIR / "backend"
 
 # Raiz del frontend: .../proyecto basico/frontend
 FRONTEND_DIR = BASE_DIR / "frontend"
+
+# Clave que se usa SOLO cuando nadie define DJANGO_SECRET_KEY. Es publica y
+# conocida: con DEBUG=False el proyecto no debe arrancar nunca con ella.
+DEV_SECRET_KEY = "django-insecure-clave-de-desarrollo-cambiar-en-produccion"
 
 
 class Environment:
@@ -80,60 +88,131 @@ class PathsConfig:
     MEDIA_DIR = BACKEND_DIR / "media"
 
 
+def _resolve_allowed_hosts(render_hostname: str) -> list:
+    """Hosts admitidos, combinando el entorno con los valores por defecto.
+
+    Siempre incluye localhost y 127.0.0.1 (desarrollo) y, si Render publico el
+    servicio, tambien su RENDER_EXTERNAL_HOSTNAME. Se pueden agregar mas con
+    DJANGO_ALLOWED_HOSTS, por ejemplo "*.onrender.com".
+    """
+    hosts = Environment.get_list("DJANGO_ALLOWED_HOSTS", [])
+    for host in ["localhost", "127.0.0.1", "0.0.0.0", "testserver"]:
+        if host not in hosts:
+            hosts.append(host)
+    if render_hostname and render_hostname not in hosts:
+        hosts.append(render_hostname)
+    return hosts
+
+
+def _resolve_csrf_trusted_origins(render_hostname: str) -> list:
+    """Origenes de confianza para CSRF (con esquema incluido)."""
+    origins = Environment.get_list(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        ["http://localhost:8000", "http://127.0.0.1:8000"],
+    )
+    if render_hostname:
+        https = f"https://{render_hostname}"
+        if https not in origins:
+            origins.append(https)
+    return origins
+
+
 class SecurityConfig:
     """Claves, hosts y modo debug."""
 
-    SECRET_KEY = Environment.get(
-        "DJANGO_SECRET_KEY", "django-insecure-clave-de-desarrollo-cambiar-en-produccion"
-    )
+    # SECRET_KEY y DEBUG SIEMPRE vienen del entorno; nunca hay un valor real
+    # escrito en el codigo.
+    SECRET_KEY = Environment.get("DJANGO_SECRET_KEY", DEV_SECRET_KEY)
     DEBUG = Environment.get_bool("DJANGO_DEBUG", True)
-    ALLOWED_HOSTS = Environment.get_list("DJANGO_ALLOWED_HOSTS", ["localhost", "127.0.0.1", "0.0.0.0", "testserver"])
-    CSRF_TRUSTED_ORIGINS = Environment.get_list(
-        "DJANGO_CSRF_TRUSTED_ORIGINS", ["http://localhost:8000", "http://127.0.0.1:8000"]
-    )
+
+    # Render lo define solo en el Web Service: es el dominio publico.
+    # Ejemplo: "dockerize-abc123" -> "dockerize-abc123.onrender.com".
+    RENDER_EXTERNAL_HOSTNAME = Environment.get("RENDER_EXTERNAL_HOSTNAME", "")
+
     SECURE_SSL_REDIRECT = Environment.get_bool("DJANGO_SECURE_SSL_REDIRECT", False)
     SESSION_COOKIE_SECURE = Environment.get_bool("DJANGO_SESSION_COOKIE_SECURE", False)
     CSRF_COOKIE_SECURE = Environment.get_bool("DJANGO_CSRF_COOKIE_SECURE", False)
 
+    # Detras de un proxy inverso (el de Render) el esquema real llega en la
+    # cabecera X-Forwarded-Proto, no en el socket.
+    TRUST_X_FORWARDED_PROTO = Environment.get_bool("DJANGO_TRUST_X_FORWARDED_PROTO", False)
 
-class MySQLConfig:
-    """Parametros de conexion a MySQL."""
+    ALLOWED_HOSTS = _resolve_allowed_hosts(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS = _resolve_csrf_trusted_origins(RENDER_EXTERNAL_HOSTNAME)
 
-    ENGINE = "django.db.backends.mysql"
-    NAME = Environment.get("MYSQL_DATABASE", "docker_basico")
-    USER = Environment.get("MYSQL_USER", "root")
-    PASSWORD = Environment.get("MYSQL_PASSWORD", "")
-    HOST = Environment.get("MYSQL_HOST", "127.0.0.1")
-    PORT = Environment.get("MYSQL_PORT", "3306")
-    CONN_MAX_AGE = Environment.get_int("MYSQL_CONN_MAX_AGE", 60)
+
+# Con DEBUG=False arrancar en produccion con una clave conocida seria un fallo
+# de seguridad. Es preferible no arrancar a arrancar con una clave publica.
+if not SecurityConfig.DEBUG and SecurityConfig.SECRET_KEY == DEV_SECRET_KEY:
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY debe estar definida en el entorno cuando "
+        "DJANGO_DEBUG=False. Genera una con:\n"
+        '    python -c "import secrets; print(secrets.token_urlsafe(64))"'
+    )
+
+
+class PostgreSQLConfig:
+    """Parametros de conexion a PostgreSQL tomados del entorno.
+
+    La fuente principal es DATABASE_URL (formato de Render). Si no existe, se
+    arma la URL con las variables sueltas DB_HOST / DB_PORT / DB_NAME /
+    DB_USER / DB_PASSWORD.
+    """
+
+    DEFAULT_PORT = 5432
 
     @classmethod
-    def options(cls) -> dict:
-        """Opciones del charset para MySQL."""
-        return {
-            "charset": "utf8mb4",
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-        }
+    def url(cls) -> str:
+        """Devuelve la DSN de PostgreSQL, o "" si no hay ninguna configurada."""
+        url = Environment.get("DATABASE_URL", "")
+        if url:
+            return url
+
+        host = Environment.get("DB_HOST", "")
+        if not host:
+            return ""
+
+        user = Environment.get("DB_USER", "")
+        password = Environment.get("DB_PASSWORD", "")
+        name = Environment.get("DB_NAME", "docker_basico")
+        port = Environment.get("DB_PORT", cls.DEFAULT_PORT)
+        # quote() evita que una contraseña con @ o / rompa la URL.
+        credenciales = f"{quote(user, safe='')}:{quote(password, safe='')}@" if user else ""
+        return f"postgresql://{credenciales}{host}:{port}/{name}"
 
 
 class DatabaseConfig:
-    """Configuracion de base de datos completa."""
+    """Configuracion de base de datos completa (PostgreSQL)."""
 
-    DEFAULT = {
-        "ENGINE": MySQLConfig.ENGINE,
-        "NAME": MySQLConfig.NAME,
-        "USER": MySQLConfig.USER,
-        "PASSWORD": MySQLConfig.PASSWORD,
-        "HOST": MySQLConfig.HOST,
-        "PORT": MySQLConfig.PORT,
-        "CONN_MAX_AGE": MySQLConfig.CONN_MAX_AGE,
-        "OPTIONS": MySQLConfig.options(),
-        "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_unicode_ci"},
-    }
+    # Sin variables de entorno el proyecto cae a SQLite, para que `manage.py`
+    # siga siendo usable en una maquina sin base de datos levantada.
+    SQLITE_URL = f"sqlite:///{(BACKEND_DIR / 'db.sqlite3').as_posix()}"
+
+    # 600 s evita re-conectar en cada peticion; con Render es necesario porque
+    # las conexiones se cortan cuando el servicio free se apaga.
+    CONN_MAX_AGE = Environment.get_int("DB_CONN_MAX_AGE", 600)
+    CONN_HEALTH_CHECKS = Environment.get_bool("DB_CONN_HEALTH_CHECKS", True)
 
     @classmethod
     def databases(cls) -> dict:
-        return {"default": cls.DEFAULT}
+        """Construye DATABASES a partir de DATABASE_URL."""
+        dsn = PostgreSQLConfig.url() or cls.SQLITE_URL
+        config = dj_database_url.config(
+            default=dsn,
+            conn_max_age=cls.CONN_MAX_AGE,
+            conn_health_checks=cls.CONN_HEALTH_CHECKS,
+        )
+        # dj-database-url solo agrega "OPTIONS" si la URL trae parametros
+        # (por ejemplo ?sslmode=require). Django tambien la rellena, pero el
+        # backend de PostgreSQL accede a settings_dict["OPTIONS"] de forma
+        # directa, asi que se garantiza que la clave exista.
+        config.setdefault("OPTIONS", {})
+        if "sqlite" in config["ENGINE"]:
+            # SQLite es un archivo local: mantener conexiones vivas entre
+            # peticiones solo genera bloqueos.
+            config["CONN_MAX_AGE"] = 0
+            config["CONN_HEALTH_CHECKS"] = False
+        return {"default": config}
 
 
 class AppsConfig:
