@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load static core_extras %}
+
+{% block title %}{{ site_name }} | {{ hero.title }}{% endblock %}
+{% block description %}{{ hero.subtitle }}{% endblock %}
+{% block body_class %}pagina pagina--inicio{% endblock %}
+
+{% block content %}
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero__fondo" aria-hidden="true"></div>
+
+  <div class="contenedor hero__grid">
+    <div class="hero__texto">
+      <span class="insignia">{{ hero.badge }}</span>
+
+      <h1 class="hero__titulo">{{ hero.title }}<span class="cursor">|</span></h1>
+
+      <p class="hero__subtitulo">{{ hero.subtitle }}</p>
+      <p class="hero__descripcion">{{ hero.description }}</p>
+
+      <div class="hero__acciones">
+        <a class="boton boton--primario boton--grande" href="{% url hero.primary_cta.target %}">
+          {{ hero.primary_cta.text }}
+        </a>
+        <a class="boton boton--contorno boton--grande" href="{% url hero.secondary_cta.target %}">
+          {{ hero.secondary_cta.text }}
+        </a>
+      </div>
+
+      <ul class="hero__tecnologias">
+        <li>imagenes reproducibles</li>
+        <li>arranque en segundos</li>
+        <li>sin diferencias entre entornos</li>
+      </ul>
+    </div>
+
+    <!-- Ventana de terminal -->
+    <div class="terminal" role="img" aria-label="Ejemplo de Dockerfile">
+      <div class="terminal__barra">
+        <span class="terminal__punto terminal__punto--rojo"></span>
+        <span class="terminal__punto terminal__punto--amarillo"></span>
+        <span class="terminal__punto terminal__punto--verde"></span>
+        <span class="terminal__ruta">~/proyecto &mdash; {{ code_example.filename }}</span>
+      </div>
+
+      <pre class="terminal__cuerpo"><code>{% for linea in code_example.lines %}{{ linea|resaltar }}
+{% endfor %}</code></pre>
+    </div>
+  </div>
+
+  <!-- Barra de estadisticas -->
+  <div class="contenedor">
+    <ul class="estadisticas">
+      {% for stat in stats %}
+        <li class="estadistica">
+          <span class="estadistica__valor">{{ stat.value }}</span>
+          <span class="estadistica__etiqueta">{{ stat.label }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<!-- ============ EXPLICACION: QUE ES DOCKER ============ -->
+<section class="seccion seccion--blanca" id="que-es">
+  <div class="contenedor">
+    <div class="seccion__encabezado">
+      <span class="insignia insignia--azul">01 / Concepto</span>
+      <h2 class="seccion__titulo">Que es Docker en la practica</h2>
+      <p class="seccion__texto">
+        Docker empaqueta tu aplicacion y todo lo que necesita para ejecutarse
+        (lenguaje, librerias, archivos de configuracion) en una imagen inmutable.
+        Luego esa imagen se ejecuta como un contenedor: un proceso aislado del
+        resto del sistema, con su propio sistema de archivos y su red.
+      </p>
+    </div>
+
+    <div class="comparacion">
+      <article class="comparacion__tarjeta">
+        <h3 class="comparacion__titulo">Maquina virtual</h3>
+        <p class="comparacion__texto">
+          Emula hardware completo y arranca un sistema operativo entero.
+        </p>
+        <ul class="lista-marcada">
+          <li class="no">Arranque de minutos</li>
+          <li class="no">GB de RAM por instancia</li>
+          <li class="si">Aislamiento fuerte</li>
+        </ul>
+      </article>
+
+      <article class="comparacion__tarjeta comparacion__tarjeta--destacada">
+        <span class="comparacion__insignia">Elegido por {{ site_name }}</span>
+        <h3 class="comparacion__titulo">Contenedor</h3>
+        <p class="comparacion__texto">
+          Comparte el kernel del host y aisla solo el proceso de tu app.
+        </p>
+        <ul class="lista-marcada">
+          <li class="si">Arranque en segundos</li>
+          <li class="si">Decenas de MB de RAM</li>
+          <li class="no">Aislamiento a nivel de proceso</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CARACTERISTICAS ============ -->
+<section class="seccion seccion--azul" id="caracteristicas">
+  <div class="contenedor">
+    <div class="seccion__encabezado seccion__encabezado--claro">
+      <span class="insignia insignia--blanca">02 / Ventajas</span>
+      <h2 class="seccion__titulo">Por que usar contenedores</h2>
+    </div>
+
+    <ul class="rejilla-3">
+      {% for feature in features %}
+        <li class="tarjeta tarjeta--oscura">
+          <span class="tarjeta__icono">{% include "partials/icono.html" with nombre=feature.icon %}</span>
+          <h3 class="tarjeta__titulo">{{ feature.title }}</h3>
+          <p class="tarjeta__texto">{{ feature.text }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<!-- ============ PASOS ============ -->
+<section class="seccion seccion--blanca" id="como-funciona">
+  <div class="contenedor">
+    <div class="seccion__encabezado">
+      <span class="insignia insignia--azul">03 / Flujo de trabajo</span>
+      <h2 class="seccion__titulo">De tu codigo a produccion en 4 pasos</h2>
+    </div>
+
+    <ol class="pasos">
+      {% for paso in steps %}
+        <li class="paso">
+          <span class="paso__numero">{{ paso.number }}</span>
+          <h3 class="paso__titulo">{{ paso.title }}</h3>
+          <p class="paso__texto">{{ paso.text }}</p>
+        </li>
+      {% endfor %}
+    </ol>
+
+    <div class="terminal terminal--claro">
+      <div class="terminal__barra">
+        <span class="terminal__punto terminal__punto--rojo"></span>
+        <span class="terminal__punto terminal__punto--amarillo"></span>
+        <span class="terminal__punto terminal__punto--verde"></span>
+        <span class="terminal__ruta">~/proyecto &mdash; bash</span>
+      </div>
+      <pre class="terminal__cuerpo"><code>{% for comando in code_example.commands %}{{ comando|resaltar_shell }}
+{% endfor %}</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRECIOS (resumen) ============ -->
+<section class="seccion seccion--gris" id="precios-resumen">
+  <div class="contenedor">
+    <div class="seccion__encabezado">
+      <span class="insignia insignia--azul">04 / Precios</span>
+      <h2 class="seccion__titulo">Planes desde {{ starting_price }}</h2>
+      <p class="seccion__texto">
+        Empieza gratis y sube de nivel cuando tu equipo lo necesite.
+      </p>
+    </div>
+
+    <div class="cta-panel">
+      <p class="cta-panel__texto">Consulta el detalle de cada plan, caracteristicas y limites.</p>
+      <a class="boton boton--primario boton--grande" href="{% url 'core:pricing' %}">Ver precios completos</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="seccion seccion--blanca" id="faq">
+  <div class="contenedor contenedor--estrecho">
+    <div class="seccion__encabezado">
+      <span class="insignia insignia--azul">05 / FAQ</span>
+      <h2 class="seccion__titulo">Preguntas frecuentes</h2>
+    </div>
+
+    <ul class="faq">
+      {% for item in faq %}
+        <li class="faq__item">
+          <details>
+            <summary class="faq__pregunta">{{ item.question }}</summary>
+            <p class="faq__respuesta">{{ item.answer }}</p>
+          </details>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<!-- ============ CONTACTO ============ -->
+<section class="seccion seccion--azul" id="contacto">
+  <div class="contenedor contenedor--estrecho">
+    <div class="seccion__encabezado seccion__encabezado--claro">
+      <span class="insignia insignia--blanca">06 / Contacto</span>
+      <h2 class="seccion__titulo">Hablemos de tu despliegue</h2>
+      <p class="seccion__texto">
+        Cuentanos que stack usas y te respondemos con una propuesta concreta.
+      </p>
+    </div>
+
+    <form class="formulario" method="post" action="{% url 'core:contact' %}" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}#contacto">
+
+      {% if contact_form.non_field_errors %}
+        <div class="alerta alerta--error">{{ contact_form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="formulario__fila">
+        {% for field in contact_form %}
+          <div class="formulario__campo">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<small class="ayuda">{{ field.help_text }}</small>{% endif %}
+            {% for error in field.errors %}<span class="error">{{ error }}</span>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="boton boton--blanco boton--grande">Enviar mensaje</button>
+    </form>
+  </div>
+</section>
+
+{% endblock %}

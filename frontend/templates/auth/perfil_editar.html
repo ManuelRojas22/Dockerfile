@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | {{ site_name }}{% endblock %}
+{% block body_class %}pagina pagina--perfil{% endblock %}
+
+{% block content %}
+<section class="seccion seccion--blanca seccion--cabecera">
+  <div class="contenedor contenedor--estrecho">
+    <nav class="migas" aria-label="Ruta de navegacion">
+      <a href="{% url 'accounts:profile' %}">Mi perfil</a>
+      <span>/</span>
+      <span>Editar</span>
+    </nav>
+
+    <h1 class="seccion__titulo seccion__titulo--xl">{{ title }}</h1>
+    <p class="seccion__texto">Actualiza los datos publicos de tu cuenta.</p>
+
+    {% if form.non_field_errors %}
+      <div class="alerta alerta--error">
+        {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" class="formulario formulario--auth" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="formulario__campo">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<small class="ayuda">{{ field.help_text|safe }}</small>{% endif %}
+          {% for error in field.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endfor %}
+
+      <div class="formulario__acciones">
+        <button type="submit" class="boton boton--primario boton--grande">Guardar cambios</button>
+        <a class="boton boton--fantasma" href="{% url 'accounts:profile' %}">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

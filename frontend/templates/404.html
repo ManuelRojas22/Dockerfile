@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}404 | {{ site_name }}{% endblock %}
+{% block body_class %}pagina pagina--error{% endblock %}
+
+{% block content %}
+<section class="error-pagina">
+  <p class="error-pagina__codigo">404</p>
+  <h1 class="seccion__titulo">Ruta no encontrada</h1>
+  <p class="seccion__texto">Ese contenedor no existe: la URL que buscas no esta registrada.</p>
+  <pre class="terminal__cuerpo terminal__cuerpo--inline"><code><span class="tok-comando">$</span> docker ps <span class="tok-opcion">-a</span>
+<span class="tok-comentario"># ningun contenedor coincide con esa ruta</span></code></pre>
+  <a class="boton boton--primario boton--grande" href="{% url 'core:home' %}">Volver al inicio</a>
+</section>
+{% endblock %}

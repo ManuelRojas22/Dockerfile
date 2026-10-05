@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Error del servidor | {{ site_name }}{% endblock %}
+{% block body_class %}pagina pagina--error{% endblock %}
+
+{% block content %}
+<section class="error-pagina">
+  <p class="error-pagina__codigo">500</p>
+  <h1 class="seccion__titulo">El contenedor se detuvo</h1>
+  <p class="seccion__texto">
+    Ocurrio un error inesperado en el servidor. Intentalo de nuevo en unos segundos.
+  </p>
+  <pre class="terminal__cuerpo terminal__cuerpo--inline"><code><span class="tok-comando">$</span> docker logs --tail 20 {{ site_name|lower }}
+<span class="tok-comentario"># el equipo ya fue notificado del incidente</span></code></pre>
+  <a class="boton boton--primario boton--grande" href="{% url 'core:home' %}">Volver al inicio</a>
+</section>
+{% endblock %}

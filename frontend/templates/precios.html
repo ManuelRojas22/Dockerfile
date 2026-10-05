@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load core_extras %}
+
+{% block title %}{{ site_name }} | Precios{% endblock %}
+{% block description %}Planes de {{ site_name }}: empieza gratis y escala con tu equipo.{% endblock %}
+{% block body_class %}pagina pagina--precios{% endblock %}
+
+{% block content %}
+
+<section class="seccion seccion--blanca seccion--cabecera">
+  <div class="contenedor">
+    <div class="seccion__encabezado">
+      <span class="insignia insignia--azul">Precios</span>
+      <h1 class="seccion__titulo seccion__titulo--xl">Elige tu plan</h1>
+      <p class="seccion__texto seccion__texto--grande">
+        Todos los planes incluyen imagenes ilimitadas en build local y soporte por
+        comunidad. Sin permanencia y con facturacion mensual o anual.
+      </p>
+    </div>
+
+    {% if has_plans %}
+      <div class="rejilla-precios">
+        {% for plan in plans %}
+          <article class="plan {% if plan.is_featured %}plan--destacado{% endif %}">
+            {% if plan.badge %}
+              <span class="plan__insignia">{{ plan.badge }}</span>
+            {% endif %}
+
+            <h2 class="plan__nombre">{{ plan.name }}</h2>
+            <p class="plan__lema">{{ plan.tagline }}</p>
+
+            <div class="plan__precio">
+              <span class="plan__cifra">{{ plan.monthly_price_display }}</span>
+              {% if not plan.is_free %}
+                <span class="plan__periodo">/ mes por usuario</span>
+              {% endif %}
+            </div>
+
+            {% if not plan.is_free %}
+              <p class="plan__anual">
+                Anual: {{ plan.yearly_price_display }}
+                {% if plan.annual_savings_percent %}
+                  <span class="plan__ahorro">-{{ plan.annual_savings_percent }}%</span>
+                {% endif %}
+              </p>
+            {% else %}
+              <p class="plan__anual">Para siempre, sin tarjeta</p>
+            {% endif %}
+
+            <ul class="plan__lista">
+              {% for feature in features_by_plan|get_item:plan.pk %}
+                <li class="plan__caracteristica">
+                  <span class="plan__check">{% include "partials/icono.html" with nombre="check" %}</span>
+                  {{ feature.title }}
+                </li>
+              {% endfor %}
+            </ul>
+
+            <a class="boton {% if plan.is_featured %}boton--primario{% else %}boton--contorno{% endif %} boton--ancho"
+               href="{% url 'core:plan_detail' plan.slug %}">
+              {% if plan.is_free %}Empezar gratis{% else %}Elegir {{ plan.name }}{% endif %}
+            </a>
+          </article>
+        {% endfor %}
+      </div>
+
+      <div class="comparacion-rapida">
+        <h2 class="comparacion-rapida__titulo">Todos los planes incluyen</h2>
+        <ul class="lista-inline">
+          <li>Imagenes base propias</li>
+          <li>Capas cacheadas en CI</li>
+          <li>Escaneo de vulnerabilidades</li>
+          <li>Documentacion y ejemplos</li>
+          <li>Despliegue con un comando</li>
+        </ul>
+      </div>
+    {% else %}
+      <p class="vacio">Aun no hay planes publicados.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="seccion seccion--azul">
+  <div class="contenedor">
+    <div class="seccion__encabezado seccion__encabezado--claro">
+      <span class="insignia insignia--blanca">Preguntas</span>
+      <h2 class="seccion__titulo">Dudas antes de contratar</h2>
+    </div>
+
+    <ul class="faq faq--oscuro">
+      <li class="faq__item">
+        <details>
+          <summary class="faq__pregunta">Puedo cambiar de plan o cancelarlo?</summary>
+          <p class="faq__respuesta">
+            Si, en cualquier momento y desde el mismo panel. Los cambios se aplican
+            en el siguiente ciclo de facturacion.
+          </p>
+        </details>
+      </li>
+      <li class="faq__item">
+        <details>
+          <summary class="faq__pregunta">Como se factura el consumo alto?</summary>
+          <p class="faq__respuesta">
+            Los planes incluyen un limite de GB y transferencia. Si lo superas, se
+            factura el extra al cierre del mes sin surprises.
+          </p>
+        </details>
+      </li>
+      <li class="faq__item">
+        <details>
+          <summary class="faq__pregunta">Ofrecen descuento anual?</summary>
+          <p class="faq__respuesta">
+            El pago anual incluye dos meses gratis, equivalente al porcentaje de
+            ahorro que ves en cada tarjeta.
+          </p>
+        </details>
+      </li>
+    </ul>
+
+    <div class="cta-panel cta-panel--blanco">
+      <p class="cta-panel__texto">Necesitas un plan a medida? Escribenos y lo armamos contigo.</p>
+      <a class="boton boton--primario boton--grande" href="{% url 'core:home' %}#contacto">Contactar</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

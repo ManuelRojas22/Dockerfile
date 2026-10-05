@@ -1,0 +1,18 @@
+# Produccion: sobreescribe docker-compose.yml
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+services:
+  web:
+    environment:
+      DJANGO_DEBUG: "False"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-cambia-esta-clave-en-produccion}
+      DJANGO_CSRF_COOKIE_SECURE: ${DJANGO_CSRF_COOKIE_SECURE:-0}
+      DJANGO_SESSION_COOKIE_SECURE: ${DJANGO_SESSION_COOKIE_SECURE:-0}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-3}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT:-60}
+      DJANGO_CARGAR_DATOS: "0"
+    command: ["web"]
+
+  db:
+    # Publica el puerto solo si lo pides explicitamente (por defecto queda cerrado)
+    ports: []

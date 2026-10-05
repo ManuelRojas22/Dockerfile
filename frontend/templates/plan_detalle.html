@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}{{ site_name }} | Plan {{ plan.name }}{% endblock %}
+{% block description %}{{ plan.tagline }}{% endblock %}
+{% block body_class %}pagina pagina--plan{% endblock %}
+
+{% block content %}
+
+<section class="seccion seccion--blanca seccion--cabecera">
+  <div class="contenedor">
+    <nav class="migas" aria-label="Ruta de navegacion">
+      <a href="{% url 'core:pricing' %}">Precios</a>
+      <span>/</span>
+      <span>{{ plan.name }}</span>
+    </nav>
+
+    <div class="plan-detalle">
+      <div class="plan-detalle__info">
+        {% if plan.badge %}<span class="insignia insignia--azul">{{ plan.badge }}</span>{% endif %}
+        <h1 class="seccion__titulo seccion__titulo--xl">{{ plan.name }}</h1>
+        <p class="seccion__texto seccion__texto--grande">{{ plan.tagline }}</p>
+        <p class="seccion__texto">{{ plan.description }}</p>
+      </div>
+
+      <div class="plan-detalle__precio">
+        <span class="plan__cifra">{{ plan.monthly_price_display }}</span>
+        {% if not plan.is_free %}
+          <p class="plan__periodo">/ mes por usuario</p>
+          <p class="plan__anual">Anual: {{ plan.yearly_price_display }}</p>
+        {% else %}
+          <p class="plan__anual">Para siempre, sin tarjeta</p>
+        {% endif %}
+        <a class="boton boton--primario boton--ancho boton--grande" href="{% url 'core:home' %}#contacto">
+          {% if plan.is_free %}Empezar gratis{% else %}Contratar{% endif %}
+        </a>
+      </div>
+    </div>
+
+    <div class="panel-caracteristicas">
+      <h2 class="panel-caracteristicas__titulo">Que incluye este plan</h2>
+      <ul class="rejilla-2">
+        {% for feature in plan_features %}
+          <li class="caracteristica">
+            <span class="plan__check">{% include "partials/icono.html" with nombre="check" %}</span>
+            <div>
+              <strong>{{ feature.title }}</strong>
+              {% if feature.description %}<p>{{ feature.description }}</p>{% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+
+{% if other_plans %}
+  <section class="seccion seccion--gris">
+    <div class="contenedor">
+      <div class="seccion__encabezado">
+        <h2 class="seccion__titulo">Otros planes</h2>
+      </div>
+      <ul class="rejilla-3">
+        {% for otro in other_plans %}
+          <li class="tarjeta">
+            <h3 class="tarjeta__titulo">{{ otro.name }}</h3>
+            <p class="tarjeta__texto">{{ otro.tagline }}</p>
+            <p class="tarjeta__precio">{{ otro.monthly_price_display }}</p>
+            <a class="boton boton--contorno boton--ancho" href="{% url 'core:plan_detail' otro.slug %}">Ver plan</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+{% endif %}
+
+{% endblock %}

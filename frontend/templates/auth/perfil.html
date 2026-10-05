@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | {{ site_name }}{% endblock %}
+{% block body_class %}pagina pagina--perfil{% endblock %}
+
+{% block content %}
+<section class="seccion seccion--blanca seccion--cabecera">
+  <div class="contenedor contenedor--estrecho">
+    <div class="perfil-cabecera">
+      <span class="miembro__avatar miembro__avatar--grande">{{ profile.initials }}</span>
+      <div>
+        <h1 class="seccion__titulo">{{ profile.display_name }}</h1>
+        <p class="perfil__correo">@{{ user.username }} &middot; {{ user.email|default:"sin correo" }}</p>
+        {% if profile.role %}<p class="perfil__cargo">{{ profile.role }}{% if profile.company %} en {{ profile.company }}{% endif %}</p>{% endif %}
+      </div>
+      <div class="perfil__acciones">
+        <a class="boton boton--contorno" href="{% url 'accounts:profile_edit' %}">Editar perfil</a>
+        <a class="boton boton--fantasma" href="{% url 'core:pricing' %}">Ver precios</a>
+      </div>
+    </div>
+
+    {% if profile.bio %}
+      <div class="panel-mision">
+        <h2 class="panel-mision__titulo">Sobre mi</h2>
+        <p class="panel-mision__texto">{{ profile.bio }}</p>
+      </div>
+    {% endif %}
+
+    <div class="panel-caracteristicas">
+      <h2 class="panel-caracteristicas__titulo">Resumen de la cuenta</h2>
+      <ul class="rejilla-2">
+        <li class="caracteristica">
+          <span class="plan__check">{% include "partials/icono.html" with nombre="check" %}</span>
+          <div><strong>Usuario</strong><p>{{ user.username }}</p></div>
+        </li>
+        <li class="caracteristica">
+          <span class="plan__check">{% include "partials/icono.html" with nombre="check" %}</span>
+          <div><strong>Miembro desde</strong><p>{{ profile.created_at|date:"d/m/Y" }}</p></div>
+        </li>
+        <li class="caracteristica">
+          <span class="plan__check">{% include "partials/icono.html" with nombre="check" %}</span>
+          <div><strong>Empresa</strong><p>{{ profile.company|default:"No definida" }}</p></div>
+        </li>
+        <li class="caracteristica">
+          <span class="plan__check">{% include "partials/icono.html" with nombre="check" %}</span>
+          <div><strong>Cargo</strong><p>{{ profile.role|default:"No definido" }}</p></div>
+        </li>
+      </ul>
+    </div>
+
+    <form action="{% url 'accounts:logout' %}" method="post" class="formulario">
+      {% csrf_token %}
+      <button type="submit" class="boton boton--contorno">Cerrar sesion</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

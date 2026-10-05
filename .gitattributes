@@ -1,0 +1,21 @@
+# Los scripts de shell deben conservar LF: con CRLF el shebang (#!/bin/sh)
+# falla dentro del contenedor con "/entrypoint.sh: not found".
+*.sh text eol=lf
+
+# Estos archivos también se leen como texto plano dentro de la imagen.
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.sql text eol=lf
+
+# Código y estilos: LF en el repositorio.
+*.py text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.html text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+
+# Nada de esto se versiona.
+*.png binary
+*.jpg binary
+*.ico binary

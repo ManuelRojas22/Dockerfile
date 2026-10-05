@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | {{ site_name }}{% endblock %}
+{% block body_class %}pagina pagina--auth{% endblock %}
+
+{% block content %}
+<section class="auth">
+  <div class="auth__panel">
+    <div class="auth__terminal">
+      <div class="terminal__barra">
+        <span class="terminal__punto terminal__punto--rojo"></span>
+        <span class="terminal__punto terminal__punto--amarillo"></span>
+        <span class="terminal__punto terminal__punto--verde"></span>
+        <span class="terminal__ruta">~/{{ site_name|lower }} &mdash; auth</span>
+      </div>
+      <pre class="terminal__cuerpo"><code><span class="tok-comando">$</span> {{ auth_mode }} --usuario
+<span class="tok-comentario"># Autenticacion con Django auth backend</span></code></pre>
+    </div>
+
+    <h1 class="auth__titulo">{{ title }}</h1>
+    <p class="auth__subtitulo">
+      {% if auth_mode == "registro" %}
+        Crea tu cuenta para empezar a desplegar contenedores hoy mismo.
+      {% else %}
+        Bienvenido de vuelta. Ingresa para continuar.
+      {% endif %}
+    </p>
+
+    {% if form.non_field_errors %}
+      <div class="alerta alerta--error">
+        {% for error in form.non_field_errors %}<span>{{ error }}</span>{% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" class="formulario formulario--auth" novalidate>
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div class="formulario__campo">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+            <small class="ayuda">{{ field.help_text|safe }}</small>
+          {% endif %}
+          {% for error in field.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endfor %}
+
+      <button type="submit" class="boton boton--primario boton--ancho boton--grande">
+        {% if auth_mode == "registro" %}Crear cuenta{% else %}Iniciar sesion{% endif %}
+      </button>
+    </form>
+
+    <p class="auth__alternativa">
+      {% if auth_mode == "registro" %}
+        Ya tienes cuenta? <a href="{% url 'accounts:login' %}">Inicia sesion</a>
+      {% else %}
+        No tienes cuenta? <a href="{% url 'accounts:register' %}">Registrate</a>
+      {% endif %}
+    </p>
+  </div>
+</section>
+{% endblock %}

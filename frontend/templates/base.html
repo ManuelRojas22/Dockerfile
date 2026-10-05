@@ -1,0 +1,114 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}{{ site_tagline }}{% endblock %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230b4fd8'/><g fill='%23fff'><rect x='8' y='11' width='4' height='4'/><rect x='14' y='11' width='4' height='4'/><rect x='20' y='11' width='4' height='4'/><rect x='8' y='17' width='4' height='4'/><rect x='14' y='17' width='4' height='4'/><rect x='20' y='17' width='4' height='4'/></g></svg>">
+</head>
+<body class="{% block body_class %}pagina{% endblock %}">
+
+  <!-- ============ NAVBAR ============ -->
+  <header class="navbar" id="navbar">
+    <div class="navbar__inner">
+
+      <a class="marca" href="{% url 'core:home' %}">
+        <span class="marca__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26">
+            <rect width="24" height="24" rx="5" fill="currentColor"></rect>
+            <g fill="#fff">
+              <rect x="6" y="8" width="3" height="3"></rect>
+              <rect x="10.5" y="8" width="3" height="3"></rect>
+              <rect x="15" y="8" width="3" height="3"></rect>
+              <rect x="6" y="13" width="3" height="3"></rect>
+              <rect x="10.5" y="13" width="3" height="3"></rect>
+              <rect x="15" y="13" width="3" height="3"></rect>
+            </g>
+          </svg>
+        </span>
+        <span class="marca__texto">{{ site_name }}<span class="marca__cursor">_</span></span>
+      </a>
+
+      <button class="navbar__toggle" type="button" data-nav-toggle aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" aria-label="Navegacion principal">
+        <ul class="nav__lista">
+          {% for link in nav_links %}
+            <li>
+              <a class="nav__enlace {% if request.resolver_match.url_name == link.view_name %}activo{% endif %}"
+                 href="{% url link.url_name %}">{{ link.label }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <div class="nav__acciones">
+          {% if user.is_authenticated %}
+            <a class="boton boton--fantasma" href="{% url 'accounts:profile' %}">{{ user.username }}</a>
+            <form action="{% url 'accounts:logout' %}" method="post" class="form-inline">
+              {% csrf_token %}
+              <button type="submit" class="boton boton--primario boton--pequeno">Salir</button>
+            </form>
+          {% else %}
+            <a class="boton boton--fantasma" href="{% url 'accounts:login' %}">Iniciar sesion</a>
+            <a class="boton boton--primario" href="{% url 'accounts:register' %}">Registrarse</a>
+          {% endif %}
+        </div>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- ============ MENSAJES ============ -->
+  {% if messages %}
+    <div class="mensajes" role="status">
+      {% for message in messages %}
+        <div class="mensaje mensaje--{{ message.tags|default:'info' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- ============ CONTENIDO ============ -->
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__marca">
+        <span class="marca__texto">{{ site_name }}<span class="marca__cursor">_</span></span>
+        <p class="footer__lema">{{ site_tagline }}</p>
+      </div>
+
+      <nav class="footer__enlaces" aria-label="Enlaces del pie">
+        <h4 class="footer__titulo">Navegacion</h4>
+        <ul>
+          {% for link in footer_links %}
+            <li><a href="{% url link.url_name %}">{{ link.label }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+
+      <div class="footer__enlaces">
+        <h4 class="footer__titulo">Contacto</h4>
+        <ul>
+          <li><a href="mailto:hola@{{ site_name|lower }}.dev">hola@{{ site_name|lower }}.dev</a></li>
+          <li><a href="{% url 'core:home' %}#contacto">Formulario de contacto</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__barra">
+      <p>&copy; {% now "Y" %} {{ site_name }}. Hecho con Django + Docker.</p>
+      <p class="footer__terminal">$ docker ps --format "healthy" &nbsp;&rarr;&nbsp; <span class="punto-verde">ok</span></p>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

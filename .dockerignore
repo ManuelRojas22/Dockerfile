@@ -1,0 +1,34 @@
+# Contexto de build: excluir todo lo que no necesita la imagen
+.git
+.gitignore
+**/.git
+
+# Credenciales: NUNCA dentro de la imagen (se inyectan por env de compose)
+.env
+**/.env
+.env.example
+
+# Entornos virtuales y caches de Python
+.venv
+venv
+env
+**/__pycache__
+**/*.py[cod]
+**/*.egg-info
+
+# Salidas de Django
+backend/staticfiles
+backend/media
+**/db.sqlite3
+*.log
+
+# Editores / sistema
+.vscode
+.idea
+**/__pycache__
+Thumbs.db
+.DS_Store
+
+# Documentacion y archivos de desarrollo
+README.md
+docs

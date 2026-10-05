@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{{ site_name }} | Quienes somos{% endblock %}
+{% block description %}{{ header.subtitle }}{% endblock %}
+{% block body_class %}pagina pagina--sobre{% endblock %}
+
+{% block content %}
+
+<section class="seccion seccion--blanca seccion--cabecera">
+  <div class="contenedor">
+    <div class="seccion__encabezado">
+      <span class="insignia insignia--azul">{{ header.badge }}</span>
+      <h1 class="seccion__titulo seccion__titulo--xl">{{ header.title }}</h1>
+      <p class="seccion__texto seccion__texto--grande">{{ header.subtitle }}</p>
+    </div>
+
+    <div class="panel-mision">
+      <h2 class="panel-mision__titulo">Nuestra mision</h2>
+      <p class="panel-mision__texto">{{ mission }}</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VALORES ============ -->
+<section class="seccion seccion--azul">
+  <div class="contenedor">
+    <div class="seccion__encabezado seccion__encabezado--claro">
+      <span class="insignia insignia--blanca">01 / Principios</span>
+      <h2 class="seccion__titulo">En que creemos</h2>
+    </div>
+
+    <ul class="rejilla-2">
+      {% for value in values %}
+        <li class="tarjeta tarjeta--oscura">
+          <h3 class="tarjeta__titulo">{{ value.title }}</h3>
+          <p class="tarjeta__texto">{{ value.text }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<!-- ============ EQUIPO ============ -->
+<section class="seccion seccion--blanca">
+  <div class="contenedor">
+    <div class="seccion__encabezado">
+      <span class="insignia insignia--azul">02 / Equipo</span>
+      <h2 class="seccion__titulo">Las personas detras del proyecto</h2>
+      <p class="seccion__texto">
+        Un equipo pequeno, multiplataforma, que habla contigo en tu mismo sprint.
+      </p>
+    </div>
+
+    {% if team %}
+      <ul class="rejilla-4">
+        {% for member in team %}
+          <li class="miembro">
+            <span class="miembro__avatar">{{ member.initials }}</span>
+            <h3 class="miembro__nombre">{{ member.full_name }}</h3>
+            <p class="miembro__cargo">{{ member.role }}</p>
+            <p class="miembro__bio">{{ member.bio }}</p>
+            <div class="miembro__redes">
+              {% if member.linkedin_url %}
+                <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn de {{ member.full_name }}">
+                  {% include "partials/icono.html" with nombre="linkedin" %}
+                </a>
+              {% endif %}
+              {% if member.github_url %}
+                <a href="{{ member.github_url }}" target="_blank" rel="noopener noreferrer" aria-label="GitHub de {{ member.full_name }}">
+                  {% include "partials/icono.html" with nombre="github" %}
+                </a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="vacio">Todavia no hay integrantes publicados.</p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ============ HITOS ============ -->
+<section class="seccion seccion--gris">
+  <div class="contenedor">
+    <div class="seccion__encabezado">
+      <span class="insignia insignia--azul">03 / Trayectoria</span>
+      <h2 class="seccion__titulo">Hitos</h2>
+    </div>
+
+    <ol class="linea-tiempo">
+      {% for hito in milestones %}
+        <li class="hito">
+          <span class="hito__anio">{{ hito.year }}</span>
+          <h3 class="hito__titulo">{{ hito.title }}</h3>
+          <p class="hito__texto">{{ hito.text }}</p>
+        </li>
+      {% endfor %}
+    </ol>
+
+    <div class="cta-panel">
+      <p class="cta-panel__texto">Quieres trabajar con contenedores sin sorpresas?</p>
+      <a class="boton boton--primario boton--grande" href="{% url 'core:pricing' %}">Ver precios</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
